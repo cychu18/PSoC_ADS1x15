@@ -15,14 +15,14 @@ void Adafruit_ADS1115(uint8_t i2cAddress) {
   m_i2cAddress = i2cAddress;
   m_conversionDelay = ADS1115_CONVERSIONDELAY;
   m_bitShift = 0;
-  m_rate = RATE_EIGHT;   // (default: 128SPS for 1115, and 1600 for 1105
+  m_rate = RATE_EIGHT;   // (default: 128SPS for 1115, and 1600 for 1015
   m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
 }
-void Adafruit_ADS1105(uint8_t i2cAddress) {
+void Adafruit_ADS1015(uint8_t i2cAddress) {
   m_i2cAddress = i2cAddress;
   m_conversionDelay = ADS1015_CONVERSIONDELAY;
   m_bitShift = 4;
-  m_rate = RATE_EIGHT;   // (default: 128SPS for 1115, and 1600 for 1105
+  m_rate = RATE_EIGHT;   // (default: 128SPS for 1115, and 1600 for 1015
   m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
 }
 
@@ -91,7 +91,7 @@ void Adafruit_ADS1105(uint8_t i2cAddress) {
     
     I2C_1_MasterSendStop();
     
-  return conversion_H<<8 | conversion_L;
+  return conversion_H<< (8 - m_bitShift) | conversion_L;
     //readRegister(m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;
     
 }
@@ -137,7 +137,7 @@ void Adafruit_ADS1105(uint8_t i2cAddress) {
     uint16_t res_H = I2C_1_MasterReadByte(I2C_1_ACK_DATA);
     uint16_t res_L = I2C_1_MasterReadByte(I2C_1_NAK_DATA);
     
-  uint16_t res = res_H<<8 |res_L;
+  uint16_t res = res_H<< (8 - m_bitShift) |res_L;
 
   if (m_bitShift != 0) {
     // Shift 12-bit results right 4 bits for the ADS1015,
@@ -188,7 +188,7 @@ void Adafruit_ADS1105(uint8_t i2cAddress) {
     uint16_t res_H = I2C_1_MasterReadByte(I2C_1_ACK_DATA);
     uint16_t res_L = I2C_1_MasterReadByte(I2C_1_NAK_DATA);
     
-  uint16_t res = res_H<<8 |res_L;
+  uint16_t res = res_H<<(8 - m_bitShift) |res_L;
     
   if (m_bitShift != 0) {
     // Shift 12-bit results right 4 bits for the ADS1015,
@@ -257,7 +257,31 @@ void Adafruit_ADS1105(uint8_t i2cAddress) {
     I2C_1_MasterSendStop();
 }
 
-  int16_t getLastConversionResults();
+  int16_t getLastConversionResults() {
+      // Wait for the conversion to complete
+      CyDelay(m_conversionDelay);
+
+      // Read the conversion results
+      I2C_1_MasterSendStart(m_i2cAddress, 00);
+      I2C_1_MasterWriteByte(ADS1015_REG_POINTER_CONVERT);
+      I2C_1_MasterSendRestart(m_i2cAddress, 01);
+      uint16_t res_H = I2C_1_MasterReadByte(I2C_1_ACK_DATA);
+      uint16_t res_L = I2C_1_MasterReadByte(I2C_1_NAK_DATA);
+
+      uint16_t res = res_H << (8 - m_bitShift) | res_L;
+
+      if (m_bitShift != 0) {
+          // Shift 12-bit results right 4 bits for the ADS1015,
+          // making sure we keep the sign bit intact
+          if (res > 0x07FF) {
+              // negative number - extend the sign to 16th bit
+              res |= 0xF000;
+          }
+      }
+      return (int16_t)res;
+
+
+  }
 
 
   uint16_t getConfig(){
