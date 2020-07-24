@@ -311,8 +311,6 @@ int16_t getLastConversionResults(){
         }
     }
     return (int16_t)res;
-
-
 }
 
 
