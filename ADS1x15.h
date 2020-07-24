@@ -9,8 +9,8 @@
  *
  * ========================================
 */
-#ifndef __ADS1115_H__
-#define __ADS1115_H__
+#ifndef __ADS1x15_H__
+#define __ADS1x15_H__
     
     #include "project.h" // include all PSoC modules from the project.h
     
@@ -150,8 +150,12 @@ typedef enum {
   uint8_t m_i2cAddress;      ///< the I2C address
   uint8_t m_conversionDelay; ///< conversion deay
   uint8_t m_bitShift;        ///< bit shift amount
-adsRate_t m_rate;           ///< ADC date rate
-adsGain_t m_gain;          ///< ADC gain
+  adsRate_t m_rate;           ///< ADC date rate
+  adsGain_t m_gain;          ///< ADC gain
+  uint8_t m_mode;           ///< ADC mode
+  uint16_t l_config;        ///< ADC last config
+  uint16_t m_config;        ///< ADC default config
+
 //public:
   void Adafruit_ADS1015(uint8_t i2cAddress );
   void Adafruit_ADS1115(uint8_t i2cAddress);
@@ -167,11 +171,11 @@ adsGain_t m_gain;          ///< ADC gain
   adsGain_t getGain(void);
   void setRate(adsRate_t rate);
   adsRate_t getRate(void);
+  void setMode(uint8_t mode);
+  uint8_t getMode(void);  
+  void setDelay(uint8_t delay);
+  uint8_t getDelay(void);  
 
 
-
-
-
-
-#endif /* __ADS1115_H__ */   
+#endif /* __ADS1x15_H__ */   
 /* [] END OF FILE */
